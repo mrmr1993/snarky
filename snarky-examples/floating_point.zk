@@ -2,6 +2,7 @@
 // know more about it, ask Mathijs.
 module Float = {
   let base_precision = 16i; // or 8...
+  let div_precision = 16i
 
   // x / 2^k, x < 2^m, k <= m
   type t =
@@ -84,6 +85,26 @@ module Float = {
       } else {
         // TODO!
       }
+    }
+  };
+
+
+  /*
+  * Verify division: a / b  = c 
+  * assert on; b * x + r = a * 2^div_precision, where:
+  * a = t1.x
+  * b = t2.x
+  * x = result
+  * r = remainder
+  * c = a * 2^div_precision */
+
+  let ( / ) = fun (t1, t2, x: field, r: field) => {
+
+    assert.r1(t2.x, Field.( + )(x, r), Field.( * )(t1.x, 2^div_precision);
+
+    { k : t1.k - t2.k
+    , m : t1.m + 1
+    , x : x * 2^(t1.k - t2.k)
     }
   };
 };
