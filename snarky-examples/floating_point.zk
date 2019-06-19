@@ -2,7 +2,7 @@
 // know more about it, ask Mathijs.
 module Float = {
   let base_precision = 16i; // or 8...
-  let div_precision = 16i
+  let div_precision = 16i;
 
   // x / 2^k, x < 2^m, k <= m
   type t =
@@ -40,10 +40,10 @@ module Float = {
          just reduce both. */
       let x1_trunc = low_bits(t1);
       let x2_trunc = low_bits(t2);
-      { x = Field.( * )(x1_trunc, x2_trunc)
-      , m = base_precision + base_precision
-      , k = t1.k + t2.k + t1.m + t2.m - 2 * base_precision
-      }
+      { k: t1.k + t2.k + t1.m + t2.m - 2 * base_precision
+      , m: base_precision + base_precision
+      , x: Field.( * )(x1_trunc, x2_trunc)
+      };
     };
   };
 
@@ -58,34 +58,38 @@ module Float = {
 
   let ( + ) = fun (t1, t2) => {
     if (t1.k >= t2.k) {
-      if t1.m + 1 < Field.size_in_bits) {
+      if (t1.m + 1 < Field.size_in_bits) {
         let x2_shift = t1.k - t2.k;
+        let x2_trunc = Field.of_int(0);
         if (x2_shift < t2.m) {
-          let x2_trunc = low_bits_n(t2, t2.m - k);
-        } else {
-          let x2_trunc = Field(0);
-        }
-        { k: t1.k,
-          , m: t1.m + 1,
-          , x: Field.( + )( t1.x , x2_trunc ) };
+          x2_trunc = low_bits_n(t2, t2.m - k);
+        };
+        { k: t1.k
+        , m: t1.m + 1
+        , x: Field.( + )( t1.x , x2_trunc ) };
       } else {
         // TODO!
-      }
+        { k: t1.k
+          , m: t1.m + 1
+          , x: Field.( + )( t1.x , t2.x ) };
+        };
     } else {
-      if t1.m + 1 < Field.size_in_bits) {
+      if (t1.m + 1 < Field.size_in_bits) {
         let x1_shift = t2.k - t1.k;
+        let x1_trunc = Field.of_int(0);
         if (x1_shift < t1.m) {
-          let x1_trunc = low_bits_n(t1, t1.m - k);
-        } else {
-          let x1_trunc = Field(0);
-        }
-        { k: t2.k,
-          , m: t2.m + 1,
+          x1_trunc = low_bits_n(t1, t1.m - k);
+        };
+        { k: t2.k
+          , m: t2.m + 1
           , x: Field.( + )( t2.x , x1_trunc ) };
       } else {
         // TODO!
-      }
-    }
+        { k: t1.k
+          , m: t1.m + 1
+          , x: Field.( + )( t1.x , t2.x ) };
+      };
+    };
   };
 
 
@@ -100,11 +104,11 @@ module Float = {
 
   let ( / ) = fun (t1, t2, x: field, r: field) => {
 
-    assert.r1(t2.x, Field.( + )(x, r), Field.( * )(t1.x, 2^div_precision);
+    assert.r1(t2.x, Field.( + )(x, r), Field.( * )(t1.x, two_to_the(div_precision)));
 
     { k : t1.k - t2.k
     , m : t1.m + 1
     , x : x * 2^(t1.k - t2.k)
-    }
+    };
   };
 };
