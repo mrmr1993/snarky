@@ -46,10 +46,10 @@ module Float = {
          just reduce both. */
       let x1_trunc = low_bits(t1);
       let x2_trunc = low_bits(t2);
-      { k: t1.k + t2.k + t1.m + t2.m - 2i * base_precision
-      , m: base_precision + base_precision
-      , x: Field.( * )(x1_trunc, x2_trunc)
-      };
+      { x = Field.( * )(x1_trunc, x2_trunc)
+      , m = base_precision + base_precision
+      , k = t1.k + t2.k + t1.m + t2.m - 2 * base_precision
+      }
     };
   };
 
@@ -64,66 +64,41 @@ module Float = {
     Field.of_bits(bits);
   };
 
+  let low_bits_n = fun (t, n) => {
+    let bits = List.rev(List.take(n, List.rev(Field.to_bits(~length=t.m, t.x))));
+    Field.of_bits(bits);
+  };
+
   let ( + ) = fun (t1, t2) => {
     if (t1.k >= t2.k) {
-      if (t1.m + 1i < Field.size_in_bits) {
+      if t1.m + 1 < Field.size_in_bits) {
         let x2_shift = t1.k - t2.k;
-
-        let x2_trunc = if (x2_shift < t2.m ) { low_bits_n(t2, t2.m - t2.k); } else { 0; };
-
-        { k: t1.k
-        , m: t1.m + 1i
-        , x: Field.( + )( t1.x , x2_trunc ) };
+        if (x2_shift < t2.m) {
+          let x2_trunc = low_bits_n(t2, t2.m - k);
+        } else {
+          let x2_trunc = Field(0);
+        }
+        { k: t1.k,
+          , m: t1.m + 1,
+          , x: Field.( + )( t1.x , x2_trunc ) };
       } else {
         // TODO!
-        { k: t1.k
-          , m: t1.m + 1i
-          , x: Field.( + )( t1.x , t2.x ) };
-        };
+      }
     } else {
-      if (t1.m + 1i < Field.size_in_bits) {
+      if t1.m + 1 < Field.size_in_bits) {
         let x1_shift = t2.k - t1.k;
-        let x1_trunc = if (x1_shift < t1.m) { low_bits_n(t1, t1.m - t1.k); } else { 0; };
-
-        { k: t2.k
-          , m: t2.m + 1i
+        if (x1_shift < t1.m) {
+          let x1_trunc = low_bits_n(t1, t1.m - k);
+        } else {
+          let x1_trunc = Field(0);
+        }
+        { k: t2.k,
+          , m: t2.m + 1,
           , x: Field.( + )( t2.x , x1_trunc ) };
       } else {
         // TODO!
-        { k: t1.k
-          , m: t1.m + 1i
-          , x: Field.( + )( t1.x , t2.x ) };
-      };
-    };
-  };
-
-
-  /*
-  * Verify division: a / b  = c 
-  * assert on; b * x + r = a * 2^div_precision, or:
-  * rank1; b * x = a * 2^div_precision - r, where:
-  * a = t1.x
-  * b = t2.x
-  * x = result
-  * r = remainder
-  * c = a * 2^div_precision 
-  */
-
-  let ( / ) = fun ({ k:k1, m:m1, x:x1 } : t, { k:k2, m:m2, x:x2 }: t) => {
-    let (x, r) = Prover {
-      let a = Big_int.big_int_of_string(Field.to_string(x1));
-      let b = Big_int.big_int_of_string(Field.to_string(x2));
-      let (x, r) = Big_int.quomod_big_int(a, b);
-      (Field.of_string(Big_int.string_of_big_int(x)), Field.of_string(Big_int.string_of_big_int(x)));
-    };
-
-    assert_r1(x2, x, Field.( - )(Field.( * )(x1, two_to_the(div_precision)), r));
-
-    // TODO assert on negative r
-    { k : k1 - k2
-    , m : m1 + div_precision;        //requires another thought
-    , x : x * two_to_the(k1 - k2)
-    };
+      }
+    }
   };
 };
 
