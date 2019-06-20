@@ -1,13 +1,12 @@
-// This is an incomplete example of floating point arithmetic. If you want to
+// This is an incomplete example of float_typeing point arithmetic. If you want to
 // know more about it, ask Mathijs.
 
-module Float = {
   let base_precision = 16i; // or 8...
   let div_precision = 16i;
 
   // s * x / 2^k, x < 2^m, k <= m
   // s 1- : 0+
-  type float =
+  type float_type =
     { s : boolean
     , k : int
     , m : int
@@ -84,7 +83,7 @@ module Float = {
     |> Field.of_string;
   };
 
-  let ( + ) = fun (t1, t2) => {
+  let ( + ) = fun (t1 : float_type, t2 : float_type) => {
     if (t1.k >= t2.k) {
       if (t1.m + 1i < Field.size_in_bits) {
         let x2_shift = t1.k - t2.k;
@@ -133,7 +132,7 @@ module Float = {
   * c = a * 2^div_precision 
   */
 
-  let ( / ) = fun ({ s:s1, k:k1, m:m1, x:x1 } : float, { s:s2, k:k2, m:m2, x:x2 }: float) => {
+  let ( / ) = fun ({ s:s1, k:k1, m:m1, x:x1 } : float_type, { s:s2, k:k2, m:m2, x:x2 }: float_type) => {
     let (x, r) = Prover {
       let a = Big_int.big_int_of_string(Field.to_string(x1));
       let b = Big_int.big_int_of_string(Field.to_string(x2));
@@ -151,7 +150,6 @@ module Float = {
     };
   };
 
-};
 
 
 
@@ -160,19 +158,18 @@ module Float = {
 
 /* This "opens" the Float module, which brings all its definitions into
    scope. */
-open Float;
 
 let main = fun () => {
-  let onex : float = { s : 0b, k : 1i, m : 1i, x : 1};
-  let two : float = { s : 0b, k : Float.base_precision, m : 2i, x : 2};
-  let three : float = { s : 0b, k : Float.base_precision, m : 2i, x : 3};
+  let one : float_type = { s : 0b, k : base_precision, m : 1i, x : 1};
+  let two : float_type = { s : 0b, k : base_precision, m : 2i, x : 2};
+  let three : float_type = { s : 0b, k : base_precision, m : 2i, x : 3};
 
   // Addition
-  let twox = Float.( + )(onex, onex);
+  let twox = ( + )(one, one);
 
 
   // Multiplication
-  let threemult = Float.( * )(one, three);
+  let threemult = ( * )(one, three);
 
   // Division
   ();
