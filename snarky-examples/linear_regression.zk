@@ -1,7 +1,7 @@
 let input_precision = 32i;
 let inner_precision = 40i; // Needs to be large enough to hold all the sums
 let decimal_point = 16i;
-let number_of_points = 8i;
+let number_of_points = 2i;
 
 
 let sum = fun( l : list(field)) : field => {
@@ -37,11 +37,7 @@ let division = fun(a : field, b : field) => {
 };
 
 let mean = fun( l : list(field)) : field => {
-	fixed_division();
-};
-
-let fixed_division = fun( a : field, b : int) : field => {
-  ();
+	division(sum(l), Field.of_int(List.length(l)));
 };
 
 let take = fun (n, xs) => {
@@ -65,18 +61,38 @@ let reduce = fun(length_before: int, length_after: int, x: field) => {
 
 
 
-let main = fun(x1 : field, x2 : field, y1 : field, y2 : field) => {
+let main = fun(x1 : field, x2 : field, y1 : field, y2 : field, ()) => {
   let x : list(field) = [x1, x2];
   let y : list(field) = [y1, y2];
 
   // Compute means
   let x_cap = mean(x); 
   let y_cap = mean(y);
+  let jfd = Prover {
+  print_string("Mean of x values: ");
+  print_endline(Field.to_string(x_cap));
 
-  let y: field = reduce(32i, 24i, Field.( + )(65537, 256));
-  let x = Prover {
-  print_string("The reduction is: ");
-  print_endline(Field.to_string(y));
+  print_string("Mean of y values: ");
+  print_endline(Field.to_string(y_cap));
   };
+  let x_m = List.map(fun (z) => { Field.( - )(z, x_cap); }, x);
+  let y_m = List.map(fun (z) => { Field.( - )(z, y_cap); }, y);
+
+  let numerator_prered = sum(List.map2(fun (x_1, x_2) => { Field.( * )(x_1, x_2); }, x_m, y_m));
+  let numerator = reduce(inner_precision + decimal_point, inner_precision, numerator_prered);
+  let denominator_prered = sum(List.map2(fun (x_1, x_2) => { Field.( * )(x_1, x_2); }, x_m, x_m));
+  let denominator = reduce(inner_precision + decimal_point, inner_precision, denominator_prered);
+
+  let m = division(numerator, denominator);
+  let b = Field.( - )(y_cap, Field.( * ) (m, x_cap));
+  let gigs = Prover {
+  print_endline("y = m * x + b");
+  print_string("m = ");
+  print_endline(Field.to_string(m));
+
+  print_string("b = ");
+  print_endline(Field.to_string(m));
+  };
+
   ();
 };
