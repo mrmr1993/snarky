@@ -3,18 +3,28 @@ let number_of_points = 8i;
 
 
 let sum = fun( l : List(field)) : field => {
-	List.fold_left(0)(+)
+	List.fold_left(+)(0)(l);
+	// potential overflow check for large lists
 };
 
-let division = fun() => {
-	
+let division = fun(a : field, b : field) => {
+	let (x, r) = Prover {
+      let a = Big_int.big_int_of_string(Field.to_string(a));
+      let b = Big_int.big_int_of_string(Field.to_string(b));
+      let (x, r) = Big_int.quomod_big_int(a, b);
+      (Field.of_string(Big_int.string_of_big_int(x)), Field.of_string(Big_int.string_of_big_int(x)));
+    };
+    // TODO x and r are correct length
+    assert_r1(b, x, Field.( - )(Field.( * )(a, two_to_the(div_precision)), r));
+    (x);
 };
 
-let mean = fun() => {
-  ();
+let mean = fun( l : List(field)) : field => {
+	fixed_division()
 };
 
-let fixed_division = fun(List(field)) : field => {
+let fixed_division = fun( a : field, b : int) : field => {
+};
 
 let two_to_the : int -> field = fun (n) => {
   Big_int.shift_left_big_int(Big_int.unit_big_int, n)
