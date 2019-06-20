@@ -19,7 +19,7 @@ module Float = {
 
   let take = 
     fun (n, xs) => {
-      loop(fun (self, (n, xs)) => {
+      loop(fun (take, (n, xs)) => {
         if (n = 0i) {
           [] ;
         } else {
