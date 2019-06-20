@@ -1,6 +1,8 @@
 // This is an incomplete example of floating point arithmetic. If you want to
 // know more about it, ask Mathijs.
 
+module Bignum_bigint = Bigint;
+
 module Float = {
   let base_precision = 16i; // or 8...
   let div_precision = 16i;
@@ -12,8 +14,8 @@ module Float = {
     , x : field
     };
 
-  type division =
-    { q : field
+  type m =
+    { x : field
     , r : field
     };
 
@@ -113,15 +115,23 @@ module Float = {
   * b = t2.x
   * x = result
   * r = remainder
-  * c = a * 2^div_precision */
+  * c = a * 2^div_precision 
+  */
 
-  let ( / ) = fun (t1, t2, x: field, r: field) => {
+  let ( / ) = fun (t1, t2) => {
+    let div = Prover {
+      let a = Bigint.of_field(t1.x);
+      let b = Bigint.of_field(t2.x);
+        { x : a /% b
+        , r : a % b
+        };
+    };
 
     assert.r1(t2.x, Field.( + )(x, r), Field.( * )(t1.x, two_to_the(div_precision)));
 
     { k : t1.k - t2.k
     , m : t1.m + 1
-    , x : x * 2^(t1.k - t2.k)
+    , x : x * two_to_the(t1.k - t2.k)
     };
   };
 };
