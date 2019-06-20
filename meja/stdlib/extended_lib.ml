@@ -376,6 +376,51 @@ module Extended_lib = {
 
   };
 
+  module Merkle_tree = {
+    // A Merkle tree with field elements at the leaves.
+    type t =
+      | Leaf (Field.Constant.t)
+      | Node (Field.Constant.t , t , t);
+
+    let get_hash = fun (t) => {
+      switch (t) {
+        | Leaf (x) => x
+        | Node (h, _, _) => h
+      };
+    };
+
+    // Here the path has the most significant bit first.
+    let get_path = fun (t, addr) => {
+      loop(fun(self, (t, addr)) => {
+        switch (t, addr) {
+          | (Leaf (_), []) => []
+          | (Node (h, l, r), true :: bs) =>
+            get_hash(l) :: self((r, bs))
+          | (Node (h, l, r), false :: bs) =>
+            get_hash(r) :: self((l, bs))
+        };
+      }, (t, addr));
+    };
+
+    /* The path should have the neighbors from top to bottom
+       The address should have the bits from top to bottom
+    */
+    let implied_root =
+      fun (~hash, leaf, (path: list(field)), addr) => {
+        List.fold_left2 (fun (acc : field, neighbor, b) => {
+            let (left, right) = select(
+              b
+              , ~then_=(neighbor, acc)
+              , ~else_=(acc, neighbor));
+            hash(
+              Field.to_bits(left) @ Field.to_bits(right));
+          },
+          leaf,
+          List.rev(path),
+          List.rev(addr));
+      };
+  };
+
   module Pedersen = {
     module Digest = {
       type t = field;
@@ -386,7 +431,6 @@ module Extended_lib = {
     module Params = {
       type t = array(quadruple((field, field)));
 
-    /*
       let load = fun (path) => {
         let comma = char_of_int(44i);
         let semi_colon = char_of_int(59i);
@@ -405,7 +449,7 @@ module Extended_lib = {
             | [x1, x2, x3, x4] => (x1, x2, x3, x4)
           };
         }, strs);
-      }; */
+      };
     };
 
     /* 4 * 2 = 2 * 4 */
