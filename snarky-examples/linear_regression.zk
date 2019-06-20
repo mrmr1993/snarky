@@ -1,16 +1,30 @@
+let input_precision = 32i;
+let number_of_points = 8i;
 
 let mean = fun() => {
-
+  ();
 };
 
 let fixed_division = fun() => {
-
+  ();
 };
 
 let reduce = fun() => {
-
+  ();
 };
 
-let main = fun () => {
-  
+let two_to_the : int -> field = fun (n) => {
+  Big_int.shift_left_big_int(Big_int.unit_big_int, n)
+  |> Big_int.string_of_big_int
+  |> Field.of_string;
+};
+
+let to_bits_signed = fun(length: int, x: field) => {
+  let y = Field.( + )(x, two_to_the(length - 1i));
+  let bits = Field.to_bits(~length=length, x);
+  bits;
+};
+
+let main = fun() => {
+  ();
 };
