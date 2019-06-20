@@ -1,0 +1,16 @@
+
+let mean = fun() => {
+
+};
+
+let fixed_division = fun() => {
+
+};
+
+let reduce = fun() => {
+
+};
+
+let main = fun () => {
+  
+};
