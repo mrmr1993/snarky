@@ -97,6 +97,12 @@ let main = fun(x1 : field, x2 : field, y1 : field, y2 : field, ()) => {
     print_endline(Field.to_string(denominator));
   };
 
+  let x_m_0 = List.nth(x_m, 0i);
+
+  as_prover (Prover {
+    print_string("x_m numerator: ");
+    print_endline(Field.to_string(x_m_0));
+  });
 
   let m = division(numerator, denominator);
   let b = Field.( - )(y_cap, Field.( * ) (m, x_cap));
