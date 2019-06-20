@@ -5,9 +5,11 @@ module Float = {
   let base_precision = 16i; // or 8...
   let div_precision = 16i;
 
-  // x / 2^k, x < 2^m, k <= m
-  type t =
-    { k : int
+  // s * x / 2^k, x < 2^m, k <= m
+  // s 1- : 0+
+  type float =
+    { s : boolean
+    , k : int
     , m : int
     , x : field
     };
@@ -59,17 +61,19 @@ module Float = {
 
   let ( * ) = fun (t1, t2) => {
     if (t1.m + t2.m < Field.size_in_bits) {
-      { k: t1.k + t2.k
-      , m: t1.m + t2.m
-      , x: Field.( * )( t1.x , t2.x ) };
+      { s : Boolean.{ t1.s || t2.s; }
+      , k : t1.k + t2.k
+      , m : t1.m + t2.m
+      , x : Field.( * )( t1.x , t2.x ) };
     } else {
       /* We could reduce just one but for ease of implementation we
          just reduce both. */
       let x1_trunc = low_bits(t1);
       let x2_trunc = low_bits(t2);
-      { k: t1.k + t2.k + t1.m + t2.m - 2i * base_precision
-      , m: base_precision + base_precision
-      , x: Field.( * )(x1_trunc, x2_trunc)
+      { s : Boolean.{ t1.s || t2.s; }
+      , k : t1.k + t2.k + t1.m + t2.m - 2i * base_precision
+      , m : base_precision + base_precision
+      , x : Field.( * )(x1_trunc, x2_trunc)
       };
     };
   };
@@ -87,12 +91,14 @@ module Float = {
 
         let x2_trunc = if (x2_shift < t2.m ) { low_bits_n(t2, t2.m - t2.k); } else { 0; };
 
-        { k: t1.k
+        { s: 0b             // temporary placeholder
+        , k: t1.k
         , m: t1.m + 1i
         , x: Field.( + )( t1.x , x2_trunc ) };
       } else {
         // TODO!
-        { k: t1.k
+        { s: 0b             // temporary placeholder
+          , k: t1.k
           , m: t1.m + 1i
           , x: Field.( + )( t1.x , t2.x ) };
         };
@@ -101,12 +107,14 @@ module Float = {
         let x1_shift = t2.k - t1.k;
         let x1_trunc = if (x1_shift < t1.m) { low_bits_n(t1, t1.m - t1.k); } else { 0; };
 
-        { k: t2.k
+        { s: 0b             // temporary placeholder
+          , k: t2.k
           , m: t2.m + 1i
           , x: Field.( + )( t2.x , x1_trunc ) };
       } else {
         // TODO!
-        { k: t1.k
+        { s: 0b             // temporary placeholder
+          , k: t1.k
           , m: t1.m + 1i
           , x: Field.( + )( t1.x , t2.x ) };
       };
@@ -125,23 +133,56 @@ module Float = {
   * c = a * 2^div_precision 
   */
 
-  let ( / ) = fun ({ k:k1, m:m1, x:x1 } : t, { k:k2, m:m2, x:x2 }: t) => {
+  let ( / ) = fun ({ s:s1, k:k1, m:m1, x:x1 } : float, { s:s2, k:k2, m:m2, x:x2 }: float) => {
     let (x, r) = Prover {
       let a = Big_int.big_int_of_string(Field.to_string(x1));
       let b = Big_int.big_int_of_string(Field.to_string(x2));
       let (x, r) = Big_int.quomod_big_int(a, b);
       (Field.of_string(Big_int.string_of_big_int(x)), Field.of_string(Big_int.string_of_big_int(x)));
     };
+    // TODO x and r are correct length
 
     assert_r1(x2, x, Field.( - )(Field.( * )(x1, two_to_the(div_precision)), r));
 
-    // TODO assert on negative r
-    { k : Stdlib.{k1 - k2;}
+    { s : Boolean.{ s1 || s2; }
+    , k : Stdlib.{k1 - k2;}
     , m : Stdlib.{m1 + div_precision;}        //requires another thought
     , x : Field.(*)(x, two_to_the(Stdlib.{k1 - k2;}))
     };
   };
+
 };
+
+
+
+
+// -------------------- Tests --------------------
+
+/* This "opens" the Float module, which brings all its definitions into
+   scope. */
+open Float;
+
+let main = fun () => {
+  let onex : float = { s : 0b, k : 1i, m : 1i, x : 1};
+  let two : float = { s : 0b, k : Float.base_precision, m : 2i, x : 2};
+  let three : float = { s : 0b, k : Float.base_precision, m : 2i, x : 3};
+
+  // Addition
+  let twox = Float.( + )(onex, onex);
+
+
+  // Multiplication
+  let threemult = Float.( * )(one, three);
+
+  // Division
+  ();
+};
+
+
+
+
+
+
 
 
 /*
