@@ -36,6 +36,27 @@ module Float = {
     Field.of_bits(bits);
   };
 
+  let low_bits_n = fun (t, n) => {
+    let bits = List.rev(take(n, List.rev(Field.to_bits(~length=t.m, t.x))));
+    Field.of_bits(bits);
+  };
+
+  let equal = fun(t1, t2) => {
+    if (t1.k >= t2.k) {
+      let x2_shift = t1.k - t2.k;
+
+      let x2_trunc = if (x2_shift < t2.m ) { low_bits_n(t2, t2.m - t2.k); } else { 0; };
+
+      Field.equal(x2_trunc, t1.x);
+    } else {
+      let x1_shift = t2.k - t1.k;
+
+      let x1_trunc = if (x1_shift < t1.m ) { low_bits_n(t1, t1.m - t1.k); } else { 0; };
+
+      Field.equal(x1_trunc, t2.x);
+    };
+  };
+
   let ( * ) = fun (t1, t2) => {
     if (t1.m + t2.m < Field.size_in_bits) {
       { k: t1.k + t2.k
@@ -57,11 +78,6 @@ module Float = {
     Big_int.shift_left_big_int(Big_int.unit_big_int, n)
     |> Big_int.string_of_big_int
     |> Field.of_string;
-  };
-
-  let low_bits_n = fun (t, n) => {
-    let bits = List.rev(take(n, List.rev(Field.to_bits(~length=t.m, t.x))));
-    Field.of_bits(bits);
   };
 
   let ( + ) = fun (t1, t2) => {
