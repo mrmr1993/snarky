@@ -1,0 +1,7 @@
+/* This "opens" the Float module, which brings all its definitions into
+   scope. */
+open Float;
+
+let main = fun () => {
+	();
+	};
