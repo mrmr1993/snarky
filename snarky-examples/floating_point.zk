@@ -17,15 +17,15 @@ module Float = {
     , r : field
     };
 
-  let take = 
-    fun (n, xs) => {
-      loop(fun (take, (n, xs)) => {
+  let take = fun (n, xs) => {
+      loop(
+        fun (self, (n, xs)) => {
         if (n = 0i) {
           [] ;
         } else {
           switch(xs) {
             | [] => []
-            | x :: xs' => x :: self((n - 1i, xs'))
+            | x :: xstail => x :: self((n - 1i, xstail))
           };
         };
       }, (n, xs));
@@ -120,9 +120,9 @@ module Float = {
     assert_r1(x2, x, Field.( - )(Field.( * )(x1, two_to_the(div_precision)), r));
 
     // TODO assert on negative r
-    { k : k1 - k2
-    , m : m1 + div_precision;        //requires another thought
-    , x : x * two_to_the(k1 - k2)
+    { k : Stdlib.{k1 - k2;}
+    , m : Stdlib.{m1 + div_precision;}        //requires another thought
+    , x : Field.(*)(x, two_to_the(Stdlib.{k1 - k2;}))
     };
   };
 };
