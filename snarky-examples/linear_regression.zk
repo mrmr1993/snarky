@@ -21,24 +21,6 @@ let to_bits_signed = fun(length: int, x: field) => {
   bits;
 };
 
-let division = fun(a : field, b : field) => {
-	let (x, r) = Prover {
-      let a = Big_int.mult_big_int (Big_int.big_int_of_string(Field.to_string(a)), Big_int.power_int_positive_int(2i, decimal_point));
-      let b = Big_int.big_int_of_string(Field.to_string(b));
-      let (x, r) = Big_int.quomod_big_int(a, b);
-      (Field.of_string(Big_int.string_of_big_int(x)), Field.of_string(Big_int.string_of_big_int(r)));
-    };
-    
-    let bits = to_bits_signed(inner_precision, x);
-    Field.Assert.lte(~bit_length=inner_precision, r, b);
-    assert_r1(b, x, Field.( - )(Field.( * )(a, two_to_the(decimal_point)), r));
-
-    (x);
-};
-
-let mean = fun( l : list(field)) : field => {
-	division(sum(l), Field.of_int(List.length(l)));
-};
 
 let take = fun (n, xs) => {
   loop(
@@ -59,7 +41,25 @@ let reduce = fun(length_before: int, length_after: int, x: field) => {
   Field.of_bits(bits);
 };
 
+let division = fun(a : field, b : field) => {
+	let (x, r) = Prover {
+      let a = Big_int.mult_big_int (Big_int.big_int_of_string(Field.to_string(a)), Big_int.power_int_positive_int(2i, decimal_point));
+      let b = Big_int.big_int_of_string(Field.to_string(b));
+      let (x, r) = Big_int.quomod_big_int(a, b);
+      (Field.of_string(Big_int.string_of_big_int(x)), Field.of_string(Big_int.string_of_big_int(r)));
+    };
+    
+    let bits = to_bits_signed(inner_precision, x);
+    Field.Assert.lte(~bit_length=inner_precision, r, b);
+    assert_r1(b, x, Field.( - )(Field.( * )(a, two_to_the(decimal_point)), r));
 
+    let result = reduce(inner_precision + decimal_point, inner_precision, x);
+    (result);
+};
+
+let mean = fun( l : list(field)) : field => {
+	division(sum(l), Field.of_int(List.length(l)));
+};
 
 let main = fun(x1 : field, x2 : field, y1 : field, y2 : field, ()) => {
   let x : list(field) = [x1, x2];
@@ -69,19 +69,29 @@ let main = fun(x1 : field, x2 : field, y1 : field, y2 : field, ()) => {
   let x_cap = mean(x); 
   let y_cap = mean(y);
   let jfd = Prover {
-  print_string("Mean of x values: ");
-  print_endline(Field.to_string(x_cap));
+    print_string("Mean of x values: ");
+    print_endline(Field.to_string(x_cap));
 
-  print_string("Mean of y values: ");
-  print_endline(Field.to_string(y_cap));
+    print_string("Mean of y values: ");
+    print_endline(Field.to_string(y_cap));
   };
   let x_m = List.map(fun (z) => { Field.( - )(z, x_cap); }, x);
   let y_m = List.map(fun (z) => { Field.( - )(z, y_cap); }, y);
 
   let numerator_prered = sum(List.map2(fun (x_1, x_2) => { Field.( * )(x_1, x_2); }, x_m, y_m));
   let numerator = reduce(inner_precision + decimal_point, inner_precision, numerator_prered);
+
   let denominator_prered = sum(List.map2(fun (x_1, x_2) => { Field.( * )(x_1, x_2); }, x_m, x_m));
   let denominator = reduce(inner_precision + decimal_point, inner_precision, denominator_prered);
+
+  let jskfdanfd = Prover {
+    print_string("m numerator: ");
+    print_endline(Field.to_string(numerator_prered));
+
+    print_string("m denominator: ");
+    print_endline(Field.to_string(denominator_prered));
+  };
+
 
   let m = division(numerator, denominator);
   let b = Field.( - )(y_cap, Field.( * ) (m, x_cap));
