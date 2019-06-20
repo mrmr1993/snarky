@@ -9,10 +9,6 @@ let fixed_division = fun() => {
   ();
 };
 
-let reduce = fun() => {
-  ();
-};
-
 let two_to_the : int -> field = fun (n) => {
   Big_int.shift_left_big_int(Big_int.unit_big_int, n)
   |> Big_int.string_of_big_int
@@ -23,6 +19,25 @@ let to_bits_signed = fun(length: int, x: field) => {
   let y = Field.( + )(x, two_to_the(length - 1i));
   let bits = Field.to_bits(~length=length, x);
   bits;
+};
+
+let take = fun (n, xs) => {
+  loop(
+    fun (self, (n, xs)) => {
+    if (n = 0i) {
+      [] ;
+    } else {
+      switch(xs) {
+        | [] => []
+        | x :: xstail => x :: self((n - 1i, xstail))
+      };
+    };
+  }, (n, xs));
+};
+
+let reduce = fun(length_before, length_after, x) => {
+  let bits = List.rev(take(length_after, List.rev(to_bits_signed(length_before, x))));
+  Field.of_bits(bits);
 };
 
 let main = fun() => {
