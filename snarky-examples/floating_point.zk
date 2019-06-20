@@ -1,8 +1,6 @@
 // This is an incomplete example of floating point arithmetic. If you want to
 // know more about it, ask Mathijs.
 
-module Bignum_bigint = Bigint;
-
 module Float = {
   let base_precision = 16i; // or 8...
   let div_precision = 16i;
@@ -14,8 +12,8 @@ module Float = {
     , x : field
     };
 
-  type m =
-    { x : field
+  type division =
+    { q : field
     , r : field
     };
 
@@ -27,14 +25,14 @@ module Float = {
         } else {
           switch(xs) {
             | [] => []
-            | x :: xs' => x :: take(n-1i, xs')
+            | x :: xs' => x :: self((n - 1i, xs'))
           };
         };
       }, (n, xs));
     };
 
   let low_bits = fun (t) => {
-    let bits = List.rev(List.take(base_precision, List.rev(Field.to_bits(~length=t.m, t.x))));
+    let bits = List.rev(take(base_precision, List.rev(Field.to_bits(~length=t.m, t.x))));
     Field.of_bits(bits);
   };
 
@@ -48,7 +46,7 @@ module Float = {
          just reduce both. */
       let x1_trunc = low_bits(t1);
       let x2_trunc = low_bits(t2);
-      { k: t1.k + t2.k + t1.m + t2.m - 2 * base_precision
+      { k: t1.k + t2.k + t1.m + t2.m - 2i * base_precision
       , m: base_precision + base_precision
       , x: Field.( * )(x1_trunc, x2_trunc)
       };
@@ -56,45 +54,44 @@ module Float = {
   };
 
   let two_to_the : int -> field = fun (n) => {
-    Field.of_int(lsl(1, n));
+    Big_int.shift_left_big_int(Big_int.unit_big_int, n)
+    |> Big_int.string_of_big_int
+    |> Field.of_string;
   };
 
   let low_bits_n = fun (t, n) => {
-    let bits = List.rev(List.take(n, List.rev(Field.to_bits(~length=t.m, t.x))));
+    let bits = List.rev(take(n, List.rev(Field.to_bits(~length=t.m, t.x))));
     Field.of_bits(bits);
   };
 
   let ( + ) = fun (t1, t2) => {
     if (t1.k >= t2.k) {
-      if (t1.m + 1 < Field.size_in_bits) {
+      if (t1.m + 1i < Field.size_in_bits) {
         let x2_shift = t1.k - t2.k;
-        let x2_trunc = Field.of_int(0);
-        if (x2_shift < t2.m) {
-          x2_trunc = low_bits_n(t2, t2.m - k);
-        };
+
+        let x2_trunc = if (x2_shift < t2.m ) { low_bits_n(t2, t2.m - t2.k); } else { 0; };
+
         { k: t1.k
-        , m: t1.m + 1
+        , m: t1.m + 1i
         , x: Field.( + )( t1.x , x2_trunc ) };
       } else {
         // TODO!
         { k: t1.k
-          , m: t1.m + 1
+          , m: t1.m + 1i
           , x: Field.( + )( t1.x , t2.x ) };
         };
     } else {
-      if (t1.m + 1 < Field.size_in_bits) {
+      if (t1.m + 1i < Field.size_in_bits) {
         let x1_shift = t2.k - t1.k;
-        let x1_trunc = Field.of_int(0);
-        if (x1_shift < t1.m) {
-          x1_trunc = low_bits_n(t1, t1.m - k);
-        };
+        let x1_trunc = if (x1_shift < t1.m) { low_bits_n(t1, t1.m - t1.k); } else { 0; };
+
         { k: t2.k
-          , m: t2.m + 1
+          , m: t2.m + 1i
           , x: Field.( + )( t2.x , x1_trunc ) };
       } else {
         // TODO!
         { k: t1.k
-          , m: t1.m + 1
+          , m: t1.m + 1i
           , x: Field.( + )( t1.x , t2.x ) };
       };
     };
@@ -103,7 +100,8 @@ module Float = {
 
   /*
   * Verify division: a / b  = c 
-  * assert on; b * x + r = a * 2^div_precision, where:
+  * assert on; b * x + r = a * 2^div_precision, or:
+  * rank1; b * x = a * 2^div_precision - r, where:
   * a = t1.x
   * b = t2.x
   * x = result
@@ -111,20 +109,20 @@ module Float = {
   * c = a * 2^div_precision 
   */
 
-  let ( / ) = fun (t1, t2) => {
-    let div = Prover {
-      let a = Bigint.of_field(t1.x);
-      let b = Bigint.of_field(t2.x);
-        { x : a /% b
-        , r : a % b
-        };
+  let ( / ) = fun ({ k:k1, m:m1, x:x1 } : t, { k:k2, m:m2, x:x2 }: t) => {
+    let (x, r) = Prover {
+      let a = Big_int.big_int_of_string(Field.to_string(x1));
+      let b = Big_int.big_int_of_string(Field.to_string(x2));
+      let (x, r) = Big_int.quomod_big_int(a, b);
+      (Field.of_string(Big_int.string_of_big_int(x)), Field.of_string(Big_int.string_of_big_int(x)));
     };
 
-    assert.r1(t2.x, Field.( + )(x, r), Field.( * )(t1.x, two_to_the(div_precision)));
+    assert_r1(x2, x, Field.( - )(Field.( * )(x1, two_to_the(div_precision)), r));
 
-    { k : t1.k - t2.k
-    , m : t1.m + 1
-    , x : x * two_to_the(t1.k - t2.k)
+    // TODO assert on negative r
+    { k : k1 - k2
+    , m : m1 + div_precision;        //requires another thought
+    , x : x * two_to_the(k1 - k2)
     };
   };
 };
