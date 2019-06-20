@@ -62,8 +62,8 @@ let mean = fun( l : list(field)) : field => {
 };
 
 let main = fun(x1 : field, x2 : field, y1 : field, y2 : field, ()) => {
-  let x : list(field) = [x1, x2];
-  let y : list(field) = [y1, y2];
+  let x : list#2(field) = [x1, x2];
+  let y : list#2(field) = [y1, y2];
 
   // Compute means
   let x_cap = mean(x); 
@@ -75,8 +75,13 @@ let main = fun(x1 : field, x2 : field, y1 : field, y2 : field, ()) => {
     print_string("Mean of y values: ");
     print_endline(Field.to_string(y_cap));
   };
-  let x_m = List.map(fun (z) => { Field.( - )(z, x_cap); }, x);
-  let y_m = List.map(fun (z) => { Field.( - )(z, y_cap); }, y);
+  let x_m: list#2(field) = List.map(fun (xi) => { Field.( - )(xi, x_cap); }, x);
+  let y_m: list#2(field) = List.map(fun (yi) => { Field.( - )(yi, y_cap); }, y);
+
+  //List.iter(fun(xi: field) => { Prover {
+  //  print_string("x_m numerator: ");
+  //  print_endline(Field.to_string(xi));
+  //}; }, x);
 
   let numerator_prered = sum(List.map2(fun (x_1, x_2) => { Field.( * )(x_1, x_2); }, x_m, y_m));
   let numerator = reduce(inner_precision + decimal_point, inner_precision, numerator_prered);
@@ -86,22 +91,22 @@ let main = fun(x1 : field, x2 : field, y1 : field, y2 : field, ()) => {
 
   let jskfdanfd = Prover {
     print_string("m numerator: ");
-    print_endline(Field.to_string(numerator_prered));
+    print_endline(Field.to_string(numerator));
 
     print_string("m denominator: ");
-    print_endline(Field.to_string(denominator_prered));
+    print_endline(Field.to_string(denominator));
   };
 
 
   let m = division(numerator, denominator);
   let b = Field.( - )(y_cap, Field.( * ) (m, x_cap));
   let gigs = Prover {
-  print_endline("y = m * x + b");
-  print_string("m = ");
-  print_endline(Field.to_string(m));
+    print_endline("y = m * x + b");
+    print_string("m = ");
+    print_endline(Field.to_string(m));
 
-  print_string("b = ");
-  print_endline(Field.to_string(m));
+    print_string("b = ");
+    print_endline(Field.to_string(b));
   };
 
   ();
