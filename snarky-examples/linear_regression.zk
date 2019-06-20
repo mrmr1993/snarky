@@ -1,13 +1,20 @@
 let input_precision = 32i;
 let number_of_points = 8i;
 
+
+let sum = fun( l : List(field)) : field => {
+	List.fold_left(0)(+)
+};
+
+let division = fun() => {
+	
+};
+
 let mean = fun() => {
   ();
 };
 
-let fixed_division = fun() => {
-  ();
-};
+let fixed_division = fun(List(field)) : field => {
 
 let two_to_the : int -> field = fun (n) => {
   Big_int.shift_left_big_int(Big_int.unit_big_int, n)
@@ -40,6 +47,14 @@ let reduce = fun(length_before, length_after, x) => {
   Field.of_bits(bits);
 };
 
-let main = fun() => {
-  ();
+
+
+let main = fun(x1 : field, x2 : field, y1 : field, y2 : field) => {
+  let x : List(field) = [x1, x2];
+  let y : List(field) = [y1, y2];
+
+  // Compute means
+  let x_cap = mean(x); 
+  let y_cap = mean(y);
+
 };
